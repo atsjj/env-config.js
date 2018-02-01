@@ -1,25 +1,50 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class EnvConfig {
-    constructor(namespace) {
+    constructor(namespace, target) {
         this.namespace = [];
-        this.namespace = namespace.split('.');
+        this._target = null;
+        if (namespace) {
+            this.namespace = namespace.split('.');
+        }
+        if (target) {
+            this._target = target.toLowerCase();
+        }
+    }
+    get target() {
+        if (this._target) {
+            return this._target;
+        }
+        else {
+            return this.has('NODE_ENV') ? this.value('NODE_ENV') : 'development';
+        }
+    }
+    value(key) {
+        return process.env[key];
     }
     keys(key) {
         return key.split('.');
     }
-    required(key) {
+    has(key) {
+        return Reflect.has(process.env, key);
+    }
+    lookup(key) {
         const keys = this.keys(key);
-        const withNamespace = [...this.namespace, ...keys].join('_').toUpperCase();
+        const withNamespaceTarget = [...this.namespace, this.target, ...keys]
+            .join('_').toUpperCase();
+        const withNamespace = [...this.namespace, ...keys]
+            .join('_').toUpperCase();
         const withoutNamespace = keys.join('_').toUpperCase();
-        if (Reflect.has(process.env, withNamespace)) {
-            return process.env[withNamespace];
-        }
-        else if (Reflect.has(process.env, withoutNamespace)) {
-            return process.env[withoutNamespace];
+        return [withNamespaceTarget, withNamespace, withoutNamespace];
+    }
+    required(key) {
+        const keys = this.lookup(key);
+        const envKey = keys.find(k => this.has(k));
+        if (envKey) {
+            return this.value(envKey);
         }
         else {
-            throw `${withNamespace} or ${withoutNamespace} must be provided.`;
+            throw `${keys.join(' or ')} must be provided.`;
         }
     }
     optional(key) {
