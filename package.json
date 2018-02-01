@@ -1,6 +1,6 @@
 {
   "name": "@atsjj/env-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Utility that pulls ENV variables in a flexible way.",
   "main": "index.js",
   "repository": "https://github.com/atsjj/env-config.js",
